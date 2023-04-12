@@ -1,18 +1,10 @@
 
 function TitleCard({socket}){
     const [player, setPlayer] = React.useState("White");
-    const [fen, setFen] = React.useState("");
     const [moves, setMoves] = React.useState("");
     const [possible, setPossible] = React.useState("");
     React.useEffect (() => {
-        socket.on("update", (recv) => {
-            setFen(recv)
-            if (recv.split(" ")[1] == "w") {
-                setPlayer("White");
-            } else {
-                setPlayer("Black");
-            }
-        });
+
     });
     const handleReset = () => {
         socket.emit('reset');
@@ -22,12 +14,23 @@ function TitleCard({socket}){
     };
 
 	React.useEffect (() => {
-		socket.on("move_data", (recv) => {
-			setMoves(recv);
-		});
-        socket.on("possible", (recv) => {
-            setPossible(recv);
-        })
+        const onMove = (recv) => setMoves(recv);
+        const onPossible = (recv) => setPossible(recv);
+        const onUpdate = (recv) => {
+            if (recv.split(" ")[1] == "w") {
+                setPlayer("White");
+            } else {
+                setPlayer("Black");
+            }
+        }
+		socket.on("move_data", onMove);
+        socket.on("possible", onPossible);
+        socket.on("update", onUpdate);
+        return ()=>{
+            socket.off("move_data", onMove);
+            socket.off("possible", onPossible);
+            socket.off("update", onUpdate);
+        }
 	});
 
     return (

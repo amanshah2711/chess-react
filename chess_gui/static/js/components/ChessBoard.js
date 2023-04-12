@@ -70,7 +70,7 @@ function ChessBoard({socket}){
 	const handleClick = function chessCallback(coordinate){
 		if (activePieces["startPos"] == null) {
 			setActivePieces({"startPos" : coordinate.toString(), "endPos" : null});
-			socket.emit("chess_gui/selected", coordinate.toString())
+			socket.emit("selected", coordinate.toString())
 		} else if (activePieces["startPos"] == coordinate) {
 			setActivePieces({"startPos" : null, "endPos" : null});
 			socket.emit('selected', '')
@@ -88,10 +88,15 @@ function ChessBoard({socket}){
 	const chess_styler = (i,j) => Object.assign({}, tile_styler(i,j), augmented_styler(i,j));
 
 	React.useEffect (() => {
-		socket.on("update", (recv) => {
-			setGrid(generateBoard(recv));
-		});
+		const onUpdateEvent = (value) =>{
+			setGrid(generateBoard(value))
+		};
+		socket.on("update", onUpdateEvent);
+		return ()=>{
+			socket.off("update", onUpdateEvent)
+		}
 	});
+
 
 	return (
 			<Board width={BOARD_DIM} height={BOARD_DIM} color_map={chess_styler} pieces={grid} callback={handleClick}></Board>

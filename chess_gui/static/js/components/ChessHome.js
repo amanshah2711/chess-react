@@ -4,7 +4,6 @@ function ChessHome({socket}){
             <div className="row justify-content-center g-5">
                 <ChessBoard socket={socket}/>
                 <TitleCard socket={socket}/>
-                <div className="col-1"></div>
             </div>
     )
 };
