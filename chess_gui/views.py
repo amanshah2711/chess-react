@@ -5,7 +5,7 @@ from chess.controller import Controller
 from chess.move import Move
 from chess.guiplayer import GUIPlayer
 
-from chess_gui import app, socketio, cross_origin
+from chess_gui import app, socketio
 # Initializing flask app
 
 user = GUIPlayer(color="w")
@@ -17,12 +17,10 @@ def index(*args, **kwargs):
     return render_template('index.html')
 
 @socketio.on('make_move')
-@cross_origin()
 def make_move(message):
     user.take_turn(Move(message))
     emit("update", controller.get_fen_position())
     emit("move_data", controller.moves)
-    return 'a'
 
 @socketio.on('reset')
 def reset():
@@ -30,7 +28,6 @@ def reset():
     emit("update", controller.get_fen_position())
     emit("move_data", controller.moves)
     emit("possible", '')
-    return 'a'
 
 @socketio.on('undo')
 def undo():
@@ -38,7 +35,6 @@ def undo():
     emit("update", controller.get_fen_position())
     emit("move_data", controller.moves)
     emit("possible", '')
-    return 'a'
 
 @socketio.on('selected')
 def selected(location):
@@ -48,4 +44,3 @@ def selected(location):
         emit('possible' ,' '.join([str(move) for move in moves]))
     else:
         emit('possible' , '')
-    return 'a'
