@@ -26,7 +26,6 @@
     "remark-parse": "^10.0.1",
     "remark-rehype": "^10.1.0",
     "remark-stringify": "^10.0.2",
-    "socket.io": "^4.5.4",
     "socket.io-client": "^4.5.4",
     "sort-by": "^1.2.0",
     "unified": "^10.1.2",
