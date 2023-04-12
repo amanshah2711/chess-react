@@ -10,10 +10,8 @@ app.jinja_env.globals.update({
   'assets_env': assets.assets_env,
 })
 
-
 CORS(app)
 socketio = SocketIO(app, cors_allowed_origins='*')
-
 
 import chess_gui.views
 
