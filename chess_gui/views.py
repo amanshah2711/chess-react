@@ -4,13 +4,16 @@ from flask_socketio import emit
 from chess.controller import Controller
 from chess.move import Move
 from chess.guiplayer import GUIPlayer
+from chess.random_player import RandomPlayer
 
 from chess_gui import app, socketio
 # Initializing flask app
 
 user = GUIPlayer(color="w")
-controller = Controller(white=user)
+opponent = RandomPlayer(color="b")
+controller = Controller()
 user.equip(controller)
+opponent.equip(controller)
 
 @app.route('/', defaults={'path': ''})
 def index(*args, **kwargs):
@@ -18,7 +21,8 @@ def index(*args, **kwargs):
 
 @socketio.on('make_move')
 def make_move(message):
-    user.take_turn(Move(message))
+    move = Move(message)
+    user.take_turn(move)
     emit("update", controller.get_fen_position())
     emit("move_data", controller.moves)
 

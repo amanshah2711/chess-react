@@ -1,9 +1,6 @@
 {
   "name": "chess",
   "version": "0.0.0",
-  "devDependencies": {
-    "flow-bin": "^0.32.0"
-  },
   "private": true,
   "proxy": "http://127.0.0.1:5000/",
   "dependencies": {
@@ -17,7 +14,7 @@
   },
   "scripts": {
     "setup": "pip -r requirements.txt && yarn install",
-    "start": "python server.py",
+    "start": "python server.py"
   },
   "eslintConfig": {
     "extends": [

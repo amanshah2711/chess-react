@@ -12,10 +12,8 @@ class Controller(object):
 
     start = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
 
-    def __init__(self, white=None, black=None, reporter=None) -> None:
+    def __init__(self, reporter=None) -> None:
         self.board = board.ChessBoard()
-        self.white = white
-        self.black = black
         self.reset()
         self.reporter = reporter
 
@@ -28,6 +26,12 @@ class Controller(object):
         self.fullmove_clock = 1
         self.history = [Controller.start]
         self.moves = ''
+
+    def switch(self):
+        if self.turn == "w":
+            self.turn = "b"
+        else:
+            self.turn = "w"
 
     def get_fen_position(self):
         fen_string = ''
@@ -62,12 +66,6 @@ class Controller(object):
         self.fullmove_clock = int(self.fullmove_clock)
         self.halfmove_clock = int(self.halfmove_clock)
     
-    def _switch(self):
-        if self.turn == "w":
-            self.turn = "b"
-        else:
-            self.turn = "w"
-    
     def take_turn(self, move): #validate correct player operating etc
         change = self.simulate_move(move)
         if change:  
@@ -75,7 +73,7 @@ class Controller(object):
             if illegal:
                 self.set_fen_position(self.history[-1])
             else:
-                self._switch()
+                self.switch()
                 if self.turn == 'w':
                     self.fullmove_clock += 1
                 self.history.append(self.get_fen_position())
@@ -195,10 +193,10 @@ class Controller(object):
         return i, j
 
     def under_attack(self, i, j):
-        self._switch()
+        self.switch()
         moves = self.possible_moves(True)
         end = self.board._coordinate_to_location(i, j)
-        self._switch()
+        self.switch()
         return end in [move.end for move in moves]
 
     def validate_move(self, player, move):
@@ -501,6 +499,10 @@ class Controller(object):
             return moves
         else:
             return [option for option in moves if self.check_safe(option)]
+    
+    def game_over(self):
+        if len(self.possible(moves, pseudo)):
+            pass
 
 
     

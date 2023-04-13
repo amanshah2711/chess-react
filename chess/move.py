@@ -8,4 +8,9 @@ class Move(object):
 
     def __repr__(self):
         return self.start + self.end + self.promotion
+
+    def __eq__(self, __value: object) -> bool:
+        if isinstance(__value, Move):
+            return repr(self) == repr(__value)
+        return False
     
