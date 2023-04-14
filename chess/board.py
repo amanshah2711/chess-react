@@ -49,15 +49,6 @@ class ChessBoard(object):
         rank = str(self.board_height - row)
         file = chr(col + 97)
         return file + rank
-
-    def is_black(self, piece):
-        return piece != 'blank' and piece.lower() == piece
-
-    def is_white(self, piece):
-        return piece != 'blank' and piece.upper() == piece
-
-    def is_blank(self, piece):
-        return piece == 'blank'
     
     def in_board(self, row, col):
         return row >= 0 and row < self.board_height and col >=0 and col < self.board_width
@@ -73,4 +64,38 @@ class ChessBoard(object):
             for j in range(self.board_width):
                 if self.board[i][j] == 'k':
                     return i, j
-        
+
+    def remaining_pieces(self):
+        pieces = ''
+        for i in range(self.board_height):
+            for j in range(self.board_width):
+                if self.board[i][j] != 'blank':
+                    pieces += self.board[i][j]
+        return pieces
+
+    def is_black(self, piece):
+        return piece != 'blank' and piece.lower() == piece
+
+    def is_white(self, piece):
+        return piece != 'blank' and piece.upper() == piece
+
+    def is_blank(self, piece):
+        return piece == 'blank'
+    
+    def is_king(self, piece):
+        return piece.lower() == 'k'
+
+    def is_queen(self, piece):
+        return piece.lower() == 'q'
+
+    def is_bishop(self, piece):
+        return piece.lower() == 'b'
+
+    def is_knight(self, piece):
+        return piece.lower() == 'n'
+
+    def is_rook(self, piece):
+        return piece.lower() == 'r'
+
+    def is_pawn(self, piece):
+        return piece.lower() == 'p'

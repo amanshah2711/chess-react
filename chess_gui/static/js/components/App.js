@@ -12,6 +12,7 @@ function App() {
     return (
         <div className="container justify-content-center margin-md p-5">
             <ChessHome socket={socket}/>
+            <Settings socket={socket}/>
         </div>
     );
 }
