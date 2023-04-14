@@ -4,7 +4,7 @@ function ChessHome({socket}){
 	React.useEffect (() => {
         const onFinish = (mssg) => {
             $("#exampleModalCenter").modal("show");
-            const color = (mssg == "b") ? "white" : "black";
+            const color = (mssg == "b") ? "White" : "Black";
             setPlayer(color);
         }
 		socket.on("game_over", onFinish);

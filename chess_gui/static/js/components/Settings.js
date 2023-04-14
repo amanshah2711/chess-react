@@ -1,13 +1,6 @@
 
 function Settings({socket}) {
 
-    const handleReset = () => {
-        socket.emit('reset');
-    };
-    const handleUndo = () => {
-        socket.emit('undo');
-    };
-
     React.useEffect (() => {
         $("#settingModal").modal("show")
     });

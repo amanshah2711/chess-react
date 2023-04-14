@@ -40,8 +40,7 @@ def options():
         opponent = opp_type[request.args['opponent']](color="b")
         opponent.equip(controller)
         undo_style = undo_type[request.args['opponent']]
-        if request.args['opponent'] != "User":
-            AI=True
+        AI = request.args['opponent'] != 'User'
     return Response(), 204
 
 @socketio.on('make_move')

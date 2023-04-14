@@ -78,40 +78,37 @@ class Controller(object):
 
     def legal_moves(self):
         moves = []
-        for i in range(self.board.board_height):
-            for j in range(self.board.board_width):
-                moves.extend(self.legal_moves_from(i, j))
+        for i, j in self.board.get_locations():
+            moves.extend(self.legal_moves_from(i, j))
         return moves
 
     def legal_moves_from(self, i, j):
         moves = [move for move in self.pseudo_moves_from(i, j) if self.check_safe(move)]
-        if self.board.is_king(self.board.board[i][j]):
+        if self.board.is_king(i, j):
             return self.legal_castle(i, j) + moves
         else:
             return moves
 
     def pseudo_moves(self):
         moves = []
-        for i in range(self.board.board_height):
-            for j in range(self.board.board_width):
-                moves.extend(self.pseudo_moves_from(i, j))
+        for i, j in self.board.get_locations():
+            moves.extend(self.pseudo_moves_from(i, j))
         return moves
     
     def pseudo_moves_from(self, i, j):
         moves = []
-        piece = self.board.board[i][j]
-        if not self.board.is_blank(piece) and ((self.turn == 'w' and self.board.is_white(piece)) or (self.turn == 'b' and self.board.is_black(piece))):
-            if self.board.is_king(piece):
+        if not self.board.is_blank(i, j) and ((self.turn == 'w' and self.board.is_white(i, j)) or (self.turn == 'b' and self.board.is_black(i, j))):
+            if self.board.is_king(i, j):
                 moves.extend(self.pseudo_king_moves(i, j)) 
-            if self.board.is_queen(piece):
+            if self.board.is_queen(i, j):
                 moves.extend(self.pseudo_queen_moves(i, j)) 
-            if self.board.is_bishop(piece):
+            if self.board.is_bishop(i,j):
                 moves.extend(self.pseudo_bishop_moves(i, j)) 
-            if self.board.is_knight(piece):
+            if self.board.is_knight(i, j):
                 moves.extend(self.pseudo_knight_moves(i, j)) 
-            if self.board.is_rook(piece):
+            if self.board.is_rook(i, j):
                 moves.extend(self.pseudo_rook_moves(i, j)) 
-            if self.board.is_pawn(piece):
+            if self.board.is_pawn(i, j):
                 moves.extend(self.pseudo_pawn_moves(i, j)) 
                 moves.extend(self.pseudo_en_passant(i, j))
         return moves
@@ -133,12 +130,11 @@ class Controller(object):
 
     def chess_move(self, move):
         rank, file = self.board._location_to_coordinate(move.start)
-        piece = self.board.board[rank][file]
         castle_update = self.castle_update(move)
         en_passant_update = self.en_passant_update(move)
-        if self.board.is_king(piece) and self.valid_castle(move):
+        if self.board.is_king(rank, file) and self.valid_castle(move):
             self.castle_move(move)
-        elif self.board.is_pawn(piece) and self.valid_en_passant(move):
+        elif self.board.is_pawn(rank, file) and self.valid_en_passant(move):
             self.en_passant_move(move)
         else:
             self.board.make_move(move)
@@ -147,19 +143,18 @@ class Controller(object):
 
     def castle_update(self, move):
         rank, file = self.board._location_to_coordinate(move.start)
-        piece = self.board.board[rank][file]
-        if self.board.is_king(piece) and self.board.is_white(piece):
+        if self.board.is_king(rank, file) and self.board.is_white(rank, file):
             return self.castling.replace('K', '').replace('Q', '')
-        elif self.board.is_king(piece) and self.board.is_black(piece):
+        elif self.board.is_king(rank, file) and self.board.is_black(rank, file):
             return self.castling.replace('k', '').replace('q', '')
-        elif self.board.is_rook(piece) and self.board.is_white(piece):
+        elif self.board.is_rook(rank, file) and self.board.is_white(rank, file):
             if file == self.board.board_width - 1:
                 return self.castling.replace('K', '')
             elif file == 0:
                 return self.castling.replace('Q', '')
             else:
                 return self.castling
-        elif self.board.is_rook(piece) and self.board.is_black(piece):
+        elif self.board.is_rook(rank, file) and self.board.is_black(rank, file):
             if file == self.board.board_width - 1:
                 return self.castling.replace('k', '')
             elif file == 0:
@@ -172,9 +167,8 @@ class Controller(object):
     def en_passant_update(self, move):
         srow, scol = self.board._location_to_coordinate(move.start)
         erow, ecol = self.board._location_to_coordinate(move.end)
-        piece = self.board.board[srow][scol]
         vrow, vcol = erow - srow, scol - ecol
-        if self.board.is_pawn(piece) and abs(vrow) == 2:
+        if self.board.is_pawn(srow, scol) and abs(vrow) == 2:
             return move.start[0] + str(self.board.board_height - (srow + sign(vrow)))
         else:
             return '-'
@@ -182,7 +176,6 @@ class Controller(object):
     def castle_move(self, move):
         srow, scol = self.board._location_to_coordinate(move.start) 
         erow, ecol = self.board._location_to_coordinate(move.end)
-        piece = self.board.board[srow][scol]
         if ecol == self.board.board_width - 1:
             self.board.make_move_coord(srow, scol, erow, self.board.board_width - 2)
             self.board.make_move_coord(erow, ecol, erow, self.board.board_width - 3)
@@ -194,10 +187,10 @@ class Controller(object):
         self.board.make_move(move)
         if self.turn == 'w':
             rank, file = self.board._location_to_coordinate(move.end)
-            self.board.board[rank+1][file] = 'blank'
+            self.board.set_blank(rank + 1, file)
         else:
             rank, file = self.board._location_to_coordinate(move.end)
-            self.board.board[rank-1][file] = 'blank'
+            self.board.set_blank(rank - 1, file)
             
     def check_safe(self, move):
         self.chess_move(move)
@@ -227,33 +220,31 @@ class Controller(object):
         while srow != erow - drow or scol != ecol - dcol:
             srow += drow
             scol += dcol
-            if self.board.board[srow][scol] != "blank":
+            if not self.board.is_blank(srow, scol):
                 return True
         return False
     
-    def same_side(self, side, piece):
-        return ((side == 'w' and self.board.is_white(piece)) or (side == 'b' and self.board.is_black(piece)))
+    def same_side(self, side, i, j):
+        return ((side == 'w' and self.board.is_white(i, j)) or (side == 'b' and self.board.is_black(i, j)))
 
     def pseudo_king_moves(self, i, j): # only propose castles when possible
         moves = []
-        piece = self.board.board[i][j]
         start = self.board._coordinate_to_location(i, j)
         for row_shift in [-1, 0, 1]:
             for col_shift in [-1, 0, 1]:
                 erow, ecol = i + row_shift, j + col_shift
-                if (row_shift != 0 or col_shift !=0) and self.board.in_board(erow, ecol) and not self.same_side(self.turn, self.board.board[erow][ecol]):
+                if (row_shift != 0 or col_shift !=0) and self.board.in_board(erow, ecol) and not self.same_side(self.turn, erow, ecol):
                     moves.append(move.Move(start + self.board._coordinate_to_location(erow, ecol)))
         return moves
     
     def legal_castle(self, i, j): 
         moves = []
-        piece = self.board.board[i][j]
         start = self.board._coordinate_to_location(i, j)
-        if self.board.is_white(piece):
+        if self.board.is_white(i, j):
             king_castle = move.Move(start + 'h1')
             queen_castle = move.Move(start + 'a1')
             mark1, mark2 = 'K', 'Q'
-        elif self.board.is_black(piece): 
+        elif self.board.is_black(i, j): 
             king_castle = move.Move(start + 'h8')
             queen_castle = move.Move(start + 'a8')
             mark1, mark2 = 'k', 'q'
@@ -273,9 +264,9 @@ class Controller(object):
         for step in range(0, 8):
             erow, ecol = i + step, j + step
             if self.board.in_board(erow, ecol) and (erow != i or ecol != j):
-                if self.board.board[erow][ecol] == 'blank':
+                if self.board.is_blank(erow, ecol):
                     moves.append(move.Move(start + self.board._coordinate_to_location(erow, ecol)))
-                elif not self.same_side(self.turn, self.board.board[erow][ecol]):
+                elif not self.same_side(self.turn, erow, ecol):
                     moves.append(move.Move(start + self.board._coordinate_to_location(erow, ecol)))
                     break
                 else:
@@ -283,9 +274,9 @@ class Controller(object):
         for step in reversed(range(-7, 0)):
             erow, ecol = i + step, j + step
             if self.board.in_board(erow, ecol) and (erow != i or ecol != j):
-                if self.board.board[erow][ecol] == 'blank':
+                if self.board.is_blank(erow, ecol):
                     moves.append(move.Move(start + self.board._coordinate_to_location(erow, ecol)))
-                elif not self.same_side(self.turn, self.board.board[erow][ecol]):
+                elif not self.same_side(self.turn, erow, ecol):
                     moves.append(move.Move(start + self.board._coordinate_to_location(erow, ecol)))
                     break
                 else:
@@ -293,9 +284,9 @@ class Controller(object):
         for step in range(0, 8):
             erow, ecol = i + step, j - step
             if self.board.in_board(erow, ecol) and (erow != i or ecol != j):
-                if self.board.board[erow][ecol] == 'blank':
+                if self.board.is_blank(erow, ecol):
                     moves.append(move.Move(start + self.board._coordinate_to_location(erow, ecol)))
-                elif not self.same_side(self.turn, self.board.board[erow][ecol]):
+                elif not self.same_side(self.turn, erow, ecol):
                     moves.append(move.Move(start + self.board._coordinate_to_location(erow, ecol)))
                     break
                 else:
@@ -303,9 +294,9 @@ class Controller(object):
         for step in reversed(range(-7, 0)):
             erow, ecol = i + step, j - step
             if self.board.in_board(erow, ecol) and (erow != i or ecol != j):
-                if self.board.board[erow][ecol] == 'blank':
+                if self.board.is_blank(erow, ecol):
                     moves.append(move.Move(start + self.board._coordinate_to_location(erow, ecol)))
-                elif not self.same_side(self.turn, self.board.board[erow][ecol]):
+                elif not self.same_side(self.turn, erow, ecol):
                     moves.append(move.Move(start + self.board._coordinate_to_location(erow, ecol)))
                     break
                 else:
@@ -318,10 +309,10 @@ class Controller(object):
         for row_shift in [2, -2]:
             for col_shift in [1, -1]:
                 erow, ecol = i + row_shift, j + col_shift
-                if self.board.in_board(erow, ecol) and not self.same_side(self.turn, self.board.board[erow][ecol]):
+                if self.board.in_board(erow, ecol) and not self.same_side(self.turn, erow, ecol):
                     moves.append(move.Move(start + self.board._coordinate_to_location(erow, ecol)))
                 erow, ecol = i + col_shift, j + row_shift 
-                if self.board.in_board(erow, ecol) and not self.same_side(self.turn, self.board.board[erow][ecol]):
+                if self.board.in_board(erow, ecol) and not self.same_side(self.turn, erow, ecol):
                     moves.append(move.Move(start + self.board._coordinate_to_location(erow, ecol)))
         return moves
 
@@ -331,9 +322,9 @@ class Controller(object):
         for step in range(0, 8):
             erow = i + 1 * step
             if self.board.in_board(erow, j) and erow != i:
-                if self.board.board[erow][j] == 'blank':
+                if self.board.is_blank(erow, j):
                     moves.append(move.Move(start + self.board._coordinate_to_location(erow, j)))
-                elif not self.same_side(self.turn, self.board.board[erow][j]):
+                elif not self.same_side(self.turn, erow, j):
                     moves.append(move.Move(start + self.board._coordinate_to_location(erow, j)))
                     break
                 else:
@@ -341,9 +332,9 @@ class Controller(object):
         for step in reversed(range(-7, 0)):
             erow = i + 1 * step
             if self.board.in_board(erow, j) and erow != i:
-                if self.board.board[erow][j] == 'blank':
+                if self.board.is_blank(erow, j):
                     moves.append(move.Move(start + self.board._coordinate_to_location(erow, j)))
-                elif not self.same_side(self.turn, self.board.board[erow][j]):
+                elif not self.same_side(self.turn, erow, j):
                     moves.append(move.Move(start + self.board._coordinate_to_location(erow, j)))
                     break
                 else:
@@ -351,9 +342,9 @@ class Controller(object):
         for step in range(0, 8):
             ecol = j + 1 * step
             if self.board.in_board(i, ecol) and ecol != j:
-                if self.board.board[i][ecol] == 'blank':
+                if self.board.is_blank(i, ecol):
                     moves.append(move.Move(start + self.board._coordinate_to_location(i, ecol)))
-                elif not self.same_side(self.turn, self.board.board[i][ecol]):
+                elif not self.same_side(self.turn, i, ecol):
                     moves.append(move.Move(start + self.board._coordinate_to_location(i, ecol)))
                     break
                 else:
@@ -361,9 +352,9 @@ class Controller(object):
         for step in reversed(range(-7, 0)):
             ecol = j + 1 * step
             if self.board.in_board(i, ecol) and ecol != j:
-                if self.board.board[i][ecol] == 'blank':
+                if self.board.is_blank(i, ecol):
                     moves.append(move.Move(start + self.board._coordinate_to_location(i, ecol)))
-                elif not self.same_side(self.turn, self.board.board[i][ecol]):
+                elif not self.same_side(self.turn, i, ecol):
                     moves.append(move.Move(start + self.board._coordinate_to_location(i, ecol)))
                     break
                 else:
@@ -373,35 +364,35 @@ class Controller(object):
     def pseudo_pawn_moves(self, i, j): 
         moves = []
         start = self.board._coordinate_to_location(i, j)
-        if self.board.is_white(self.board.board[i][j]):
-            if self.board.in_board(i - 1, j) and self.board.board[i - 1][j] == 'blank': # move forward
+        if self.board.is_white(i, j):
+            if self.board.in_board(i - 1, j) and self.board.is_blank(i - 1, j): # move forward
                 moves.append(move.Move(start + self.board._coordinate_to_location(i - 1, j)))
-            if self.board.in_board(i - 2, j) and self.board.board[i - 2][j] == 'blank' and self.board.board[i - 1][j] == 'blank'and i == 6: # move forward 2 from starting rank
+            if self.board.in_board(i - 2, j) and self.board.is_blank(i - 2, j) and self.board.is_blank(i - 1, j) and i == 6: # move forward 2 from starting rank
                 moves.append(move.Move(start + self.board._coordinate_to_location(i - 2, j)))
-            if self.board.in_board(i - 1, j + 1) and (self.board.board[i - 1][j + 1] != 'blank' and not self.same_side(self.turn, self.board.board[i - 1][j + 1])):
+            if self.board.in_board(i - 1, j + 1) and not self.board.is_blank(i - 1, j + 1) and not self.same_side(self.turn, i - 1, j + 1):
                 moves.append(move.Move(start + self.board._coordinate_to_location(i - 1, j + 1)))
-            if self.board.in_board(i - 1, j - 1) and (self.board.board[i - 1][j - 1] != 'blank' and not self.same_side(self.turn, self.board.board[i - 1][j - 1])):
+            if self.board.in_board(i - 1, j - 1) and not self.board.is_blank(i - 1, j - 1) and not self.same_side(self.turn, i - 1, j - 1):
                 moves.append(move.Move(start + self.board._coordinate_to_location(i - 1, j - 1)))
-        elif self.board.is_black(self.board.board[i][j]):
-            if self.board.in_board(i + 1, j) and self.board.board[i + 1][j] == 'blank':
+        elif self.board.is_black(i, j):
+            if self.board.in_board(i + 1, j) and self.board.is_blank(i + 1, j):
                 moves.append(move.Move(start + self.board._coordinate_to_location(i + 1, j)))
-            if self.board.in_board(i + 2, j) and self.board.board[i + 2][j] == 'blank' and self.board.board[i+1][j] == 'blank' and i == 1:
+            if self.board.in_board(i + 2, j) and self.board.is_blank(i + 2, j) and self.board.is_blank(i + 1, j) and i == 1:
                 moves.append(move.Move(start + self.board._coordinate_to_location(i + 2, j)))
-            if self.board.in_board(i + 1, j + 1) and self.board.board[i + 1][j + 1] != 'blank' and not self.same_side(self.turn, self.board.board[i + 1][j + 1]):
+            if self.board.in_board(i + 1, j + 1) and not self.board.is_blank(i + 1, j + 1) and not self.same_side(self.turn, i + 1, j + 1):
                 moves.append(move.Move(start + self.board._coordinate_to_location(i + 1, j + 1)))
-            if self.board.in_board(i + 1, j - 1) and self.board.board[i + 1][j - 1] != 'blank' and not self.same_side(self.turn, self.board.board[i + 1][j - 1]):
+            if self.board.in_board(i + 1, j - 1) and not self.board.is_blank(i + 1, j - 1) and not self.same_side(self.turn, i + 1, j - 1):
                 moves.append(move.Move(start + self.board._coordinate_to_location(i + 1, j - 1)))
         return moves
 
     def pseudo_en_passant(self, i, j):
         moves = []
         start = self.board._coordinate_to_location(i, j)
-        if self.board.is_white(self.board.board[i][j]):
+        if self.board.is_white(i, j):
             if self.en_passant == self.board._coordinate_to_location(i - 1, j + 1):
                 moves.append(move.Move(start + self.board._coordinate_to_location(i - 1, j + 1)))
             if self.en_passant == self.board._coordinate_to_location(i - 1, j - 1):
                 moves.append(move.Move(start + self.board._coordinate_to_location(i - 1, j - 1)))
-        elif self.board.is_black(self.board.board[i][j]):
+        elif self.board.is_black(i, j):
             if self.en_passant == self.board._coordinate_to_location(i + 1, j + 1):
                 moves.append(move.Move(start + self.board._coordinate_to_location(i + 1, j + 1)))
             if self.en_passant == self.board._coordinate_to_location(i + 1, j - 1):

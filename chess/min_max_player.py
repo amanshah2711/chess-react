@@ -51,16 +51,16 @@ class MinMaxPlayer(player.Player):
 
     def heuristic(self, board):
         total = 0
-        sign = lambda piece : 1 if board.is_black(piece) else -1
-        for piece in board.remaining_pieces():
-            if board.is_queen(piece):
-                total += sign(piece) * 9
-            if board.is_bishop(piece):
-                total += sign(piece) * 3
-            if board.is_knight(piece):
-                total += sign(piece) * 3
-            if board.is_rook(piece):
-                total += sign(piece) * 5
-            if board.is_pawn(piece):
-                total += sign(piece) * 1
+        sign = lambda i, j: 1 if board.is_black(i, j) else -1
+        for i, j in board.locations:
+            if board.is_queen(i, j):
+                total += sign(i, j) * 9
+            if board.is_bishop(i, j):
+                total += sign(i, j) * 3
+            if board.is_knight(i, j):
+                total += sign(i, j) * 3
+            if board.is_rook(i, j):
+                total += sign(i, j) * 5
+            if board.is_pawn(i, j):
+                total += sign(i, j) * 1
         return total

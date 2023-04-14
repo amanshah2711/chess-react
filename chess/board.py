@@ -7,15 +7,15 @@ class ChessBoard(object):
    
     def __init__(self) -> None:
         self.board = []
-        self.history= []
+        self.locations = []
         self.reset()
 
     def reset(self):
         self.set_fen_position(ChessBoard.start)
-        self.history = []
 
     def set_fen_position(self, fen_string) -> None:
         self.board = []
+        self.locations = []
         for string_row in fen_string.split(' ')[0].split('/'):
             row = []
             for character in string_row:
@@ -27,15 +27,37 @@ class ChessBoard(object):
                     raise Error
             self.board.append(row)
 
+        for i in range(self.board_height):
+            for j in range(self.board_width):
+                if self.board[i][j] != 'blank':
+                    self.locations.append((i, j))
+
+    def get(self, row, col):
+        return self.board[row][col]
+
+    def get_coord(self, row, col):
+        return self.board[row][col]
+    
+    def get_locations(self):
+        return self.locations[:]
+
     def make_move(self, move) -> str:
-        scol, srow = self._location_to_coordinate(move.start)
-        ecol, erow = self._location_to_coordinate(move.end)
-        piece, self.board[scol][srow] = self.board[scol][srow], 'blank' 
-        self.board[ecol][erow] = piece
+        srow, scol = self._location_to_coordinate(move.start)
+        erow, ecol = self._location_to_coordinate(move.end)
+        piece, self.board[srow][scol] = self.board[srow][scol], 'blank' 
+        self.board[erow][ecol] = piece
+        self.locations.remove((srow, scol))
+        self.locations.append((erow, ecol))
     
     def make_move_coord(self, srow, scol, erow, ecol):
         piece, self.board[srow][scol] = self.board[srow][scol], 'blank'
         self.board[erow][ecol] = piece
+        self.locations.remove((srow, scol))
+        self.locations.append((erow, ecol))
+    
+    def set_blank(self, row, col):
+        self.board[row][col] = "blank"
+        self.locations.remove((row, col))
 
     def _location_to_coordinate(self, location):
         file = ord(location[0]) - 96
@@ -67,35 +89,33 @@ class ChessBoard(object):
 
     def remaining_pieces(self):
         pieces = ''
-        for i in range(self.board_height):
-            for j in range(self.board_width):
-                if self.board[i][j] != 'blank':
-                    pieces += self.board[i][j]
+        for i, j in self.locations:
+            pieces += self.board[i][j]
         return pieces
 
-    def is_black(self, piece):
-        return piece != 'blank' and piece.lower() == piece
+    def is_black(self, i, j):
+        return self.board[i][j] != 'blank' and self.board[i][j].lower() == self.board[i][j]
 
-    def is_white(self, piece):
-        return piece != 'blank' and piece.upper() == piece
+    def is_white(self, i, j):
+        return self.board[i][j] != 'blank' and self.board[i][j].upper() == self.board[i][j]
 
-    def is_blank(self, piece):
-        return piece == 'blank'
+    def is_blank(self, i, j):
+        return self.board[i][j] == 'blank'
     
-    def is_king(self, piece):
-        return piece.lower() == 'k'
+    def is_king(self, i, j):
+        return self.board[i][j].lower() == 'k'
 
-    def is_queen(self, piece):
-        return piece.lower() == 'q'
+    def is_queen(self, i, j):
+        return self.board[i][j].lower() == 'q'
 
-    def is_bishop(self, piece):
-        return piece.lower() == 'b'
+    def is_bishop(self, i, j):
+        return self.board[i][j].lower() == 'b'
 
-    def is_knight(self, piece):
-        return piece.lower() == 'n'
+    def is_knight(self, i, j):
+        return self.board[i][j].lower() == 'n'
 
-    def is_rook(self, piece):
-        return piece.lower() == 'r'
+    def is_rook(self, i, j):
+        return self.board[i][j].lower() == 'r'
 
-    def is_pawn(self, piece):
-        return piece.lower() == 'p'
+    def is_pawn(self, i, j):
+        return self.board[i][j].lower() == 'p'
