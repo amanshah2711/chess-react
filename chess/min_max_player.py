@@ -11,7 +11,6 @@ class MinMaxPlayer(player.Player):
         self.counter = 0
 
     def find_move(self, color, depth, save=False, alpha=-float('inf'), beta=float('inf')):
-        self.counter += 1
         if depth == 0:
             return self.heuristic(self.controller.board)
 
@@ -46,7 +45,6 @@ class MinMaxPlayer(player.Player):
 
     def take_turn(self):
         self.find_move(self.color, depth=2, save=True)
-        self.counter = 0
         self.controller.take_turn(self.best_move)
 
     def heuristic(self, board):

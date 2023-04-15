@@ -13,8 +13,10 @@ function Board({width, height, color_map, pieces, callback}) {
         board.push(<div className="row m-0" key={i}>{row}</div>)
     }
     return (
-            <div className="col-9 p-0 border border-dark">
-                {board}
+            <div className="col-9 p-0">
+                <div className="border border-dark">
+                    {board}
+                </div>
             </div>
     )
 };
