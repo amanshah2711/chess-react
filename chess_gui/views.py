@@ -55,7 +55,7 @@ def make_move(message):
     emit("update", controller.get_fen_position())
     emit("move_data", controller.moves)
     if controller.game_over():
-        emit("game_over", controller.turn)
+      emit("game_over", controller.turn)
 
 @socketio.on('reset')
 def reset():

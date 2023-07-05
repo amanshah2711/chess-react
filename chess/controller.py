@@ -11,7 +11,7 @@ def sign(x):
     
 class Controller(object):
 
-    start = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
+    start = 'w KQkq - 0 1'
 
     def __init__(self, reporter=None) -> None:
         self.board = board.ChessBoard()
@@ -27,33 +27,23 @@ class Controller(object):
         self.fullmove_clock = 1
         self.history = [Controller.start]
         self.moves = ''
+        self.switch()
+        self.opposing_moves = self.pseudo_moves()
+        self.switch()
+        #self.opposing_moves = []
 
     def undo(self):
         if len(self.history) > 1:
             self.history.pop()
-            self.set_fen_position(self.history[-1])
+            self.set_fen_data(self.history[-1])
+            self.board.undo()
             self.moves = ' '.join(self.moves.split(' ')[:-1])
 
     def get_fen_position(self):
-        fen_string = ''
-        count = 0
-        for row in self.board.board:
-            for index, square in enumerate(row): # More elegant way?
-                if square != 'blank':
-                    if count:
-                        fen_string += str(count)
-                        count = 0
-                    fen_string += square
-                elif index == self.board.board_width - 1:
-                    count += 1
-                    fen_string += str(count)
-                    count = 0
-                else:
-                    count += 1
-            
-            fen_string += '/'
+        return self.board.get_fen_position() + ' ' + self.get_fen_data()
 
-        fen_string += ' ' + self.turn
+    def get_fen_data(self):
+        fen_string = self.turn
         fen_string += ' ' + self.castling
         fen_string += ' ' + self.en_passant
         fen_string += ' ' + str(self.halfmove_clock)
@@ -61,9 +51,17 @@ class Controller(object):
         return fen_string
 
     def set_fen_position(self, fen_string):
+        fen_board, fen_data = fen_string.split(' ')[0], fen_string.split(' ')[1:]
+        fen_data = ' '.join(fen_data)
         self.board.set_fen_position(fen_string)
-        self.turn = fen_string.split(' ')[1]
-        _, self.turn, self.castling, self.en_passant, self.halfmove_clock, self.fullmove_clock = fen_string.split(' ')
+        self.set_fen_data(fen_data)
+        self.history.append(fen_data)
+        self.switch()
+        self.opposing_moves = self.pseudo_moves()
+        self.switch()
+    
+    def set_fen_data(self, fen_data):
+        self.turn, self.castling, self.en_passant, self.halfmove_clock, self.fullmove_clock = fen_data.split(' ')
         self.fullmove_clock = int(self.fullmove_clock)
         self.halfmove_clock = int(self.halfmove_clock)
 
@@ -97,7 +95,7 @@ class Controller(object):
     
     def pseudo_moves_from(self, i, j):
         moves = []
-        if not self.board.is_blank(i, j) and ((self.turn == 'w' and self.board.is_white(i, j)) or (self.turn == 'b' and self.board.is_black(i, j))):
+        if not self.board.is_blank(i, j) and self.same_side(self.turn, i, j):
             if self.board.is_king(i, j):
                 moves.extend(self.pseudo_king_moves(i, j)) 
             if self.board.is_queen(i, j):
@@ -111,16 +109,17 @@ class Controller(object):
             if self.board.is_pawn(i, j):
                 moves.extend(self.pseudo_pawn_moves(i, j)) 
                 moves.extend(self.pseudo_en_passant(i, j))
+                moves.extend(self.pseudo_promotion(i, j))
         return moves
 
-    def take_turn(self, move):
-        if move in self.legal_moves():
+    def take_turn(self, move, bypass=False):
+        if bypass or move in self.legal_moves():
             self.chess_move(move)
             self.switch()
             self.halfmove_clock += 1
             if self.turn == 'w':
                 self.fullmove_clock += 1
-            self.history.append(self.get_fen_position())
+            self.history.append(self.get_fen_data())
             if self.moves:
                 self.moves += ' ' + str(move) 
             else:
@@ -129,6 +128,7 @@ class Controller(object):
         return False
 
     def chess_move(self, move):
+        self.board.save()
         rank, file = self.board._location_to_coordinate(move.start)
         castle_update = self.castle_update(move)
         en_passant_update = self.en_passant_update(move)
@@ -136,10 +136,16 @@ class Controller(object):
             self.castle_move(move)
         elif self.board.is_pawn(rank, file) and self.valid_en_passant(move):
             self.en_passant_move(move)
+        elif self.board.is_pawn(rank, file) and self.valid_promotion(move):
+            self.promotion_move(move)
         else:
             self.board.make_move(move)
+
         self.castling = castle_update if castle_update else '-'
         self.en_passant = en_passant_update
+        #self.switch()
+        #self.opposing_moves = self.pseudo_moves() # TEST
+        #self.switch()
 
     def castle_update(self, move):
         rank, file = self.board._location_to_coordinate(move.start)
@@ -191,11 +197,17 @@ class Controller(object):
         else:
             rank, file = self.board._location_to_coordinate(move.end)
             self.board.set_blank(rank - 1, file)
-            
+
+    def promotion_move(self, move):
+        erow, ecol = self.board._location_to_coordinate(move.end) 
+        self.board.make_move(move)
+        self.board.set(erow, ecol, move.promotion)
+
     def check_safe(self, move):
         self.chess_move(move)
         illegal = self.king_in_check()
-        self.set_fen_position(self.history[-1])
+        self.board.undo()
+        self.set_fen_data(self.history[-1])
         return not illegal 
 
     def king_in_check(self):
@@ -206,11 +218,23 @@ class Controller(object):
         return self.under_attack(i, j)
 
     def under_attack(self, i, j):
+        cleanup = False
+        if self.board.is_blank(i, j):
+            cleanup = True
+            if self.turn == 'w':
+                self.board.set(i, j, 'P')
+            elif self.turn == 'b':
+                self.board.set(i, j, 'p')
         self.switch()
         moves = self.pseudo_moves()
         end = self.board._coordinate_to_location(i, j)
         self.switch()
+        if cleanup:
+            self.board.set(i, j, 'blank')
         return end in [move.end for move in moves]
+        #end = self.board._coordinate_to_location(i, j)
+        #value = end in [move.end for move in self.opposing_moves]
+        #return value 
 
     def is_blocked(self, move):
         srow, scol = self.board._location_to_coordinate(move.start)
@@ -237,7 +261,7 @@ class Controller(object):
                     moves.append(move.Move(start + self.board._coordinate_to_location(erow, ecol)))
         return moves
     
-    def legal_castle(self, i, j): 
+    def legal_castle(self, i, j): #doesnt check rooks 
         moves = []
         start = self.board._coordinate_to_location(i, j)
         if self.board.is_white(i, j):
@@ -249,9 +273,9 @@ class Controller(object):
             queen_castle = move.Move(start + 'a8')
             mark1, mark2 = 'k', 'q'
         if not self.king_in_check():
-            if mark1 in self.castling and not self.under_attack(i, j + 1) and not self.under_attack(i, j + 2) and not self.is_blocked(king_castle):
+            if mark1 in self.castling and not self.under_attack(i, j + 1) and not self.under_attack(i, j + 2) and not self.is_blocked(king_castle) and self.board.is_rook(i, 7) and self.same_side(self.turn, i, 7):
                 moves.append(king_castle)
-            if mark2 in self.castling and not self.under_attack(i, j - 1) and not self.under_attack(i, j - 2) and not self.is_blocked(queen_castle):
+            if mark2 in self.castling and not self.under_attack(i, j - 1) and not self.under_attack(i, j - 2) and not self.is_blocked(queen_castle) and self.board.is_rook(i, 0) and self.same_side(self.turn, i, 0):
                 moves.append(queen_castle)
         return moves
 
@@ -364,7 +388,7 @@ class Controller(object):
     def pseudo_pawn_moves(self, i, j): 
         moves = []
         start = self.board._coordinate_to_location(i, j)
-        if self.board.is_white(i, j):
+        if self.board.is_white(i, j) and i != 1:
             if self.board.in_board(i - 1, j) and self.board.is_blank(i - 1, j): # move forward
                 moves.append(move.Move(start + self.board._coordinate_to_location(i - 1, j)))
             if self.board.in_board(i - 2, j) and self.board.is_blank(i - 2, j) and self.board.is_blank(i - 1, j) and i == 6: # move forward 2 from starting rank
@@ -373,7 +397,7 @@ class Controller(object):
                 moves.append(move.Move(start + self.board._coordinate_to_location(i - 1, j + 1)))
             if self.board.in_board(i - 1, j - 1) and not self.board.is_blank(i - 1, j - 1) and not self.same_side(self.turn, i - 1, j - 1):
                 moves.append(move.Move(start + self.board._coordinate_to_location(i - 1, j - 1)))
-        elif self.board.is_black(i, j):
+        elif self.board.is_black(i, j) and i != 6:
             if self.board.in_board(i + 1, j) and self.board.is_blank(i + 1, j):
                 moves.append(move.Move(start + self.board._coordinate_to_location(i + 1, j)))
             if self.board.in_board(i + 2, j) and self.board.is_blank(i + 2, j) and self.board.is_blank(i + 1, j) and i == 1:
@@ -398,10 +422,41 @@ class Controller(object):
             if self.en_passant == self.board._coordinate_to_location(i + 1, j - 1):
                 moves.append(move.Move(start + self.board._coordinate_to_location(i + 1, j - 1)))
         return moves
+    
+    def pseudo_promotion(self, i, j):
+        moves = []
+        start = self.board._coordinate_to_location(i, j)
+        options = ['Q', 'B', 'N', 'R']
+        if self.board.is_white(i, j) and i == 1:
+            if self.board.in_board(i - 1, j) and self.board.is_blank(i - 1, j): # move forward
+                for option in options:
+                    moves.append(move.Move(start + self.board._coordinate_to_location(i - 1, j) + option.upper()))
+            if self.board.in_board(i - 1, j + 1) and not self.board.is_blank(i - 1, j + 1) and not self.same_side(self.turn, i - 1, j + 1):
+                for option in options:
+                    moves.append(move.Move(start + self.board._coordinate_to_location(i - 1, j + 1) + option.upper()))
+            if self.board.in_board(i - 1, j - 1) and not self.board.is_blank(i - 1, j - 1) and not self.same_side(self.turn, i - 1, j - 1):
+                for option in options:
+                    moves.append(move.Move(start + self.board._coordinate_to_location(i - 1, j - 1) + option.upper()))
+
+        elif self.board.is_black(i, j) and i == 6:
+            if self.board.in_board(i + 1, j) and self.board.is_blank(i + 1, j):
+                for option in options:
+                    moves.append(move.Move(start + self.board._coordinate_to_location(i + 1, j) + option.lower()))
+            if self.board.in_board(i + 1, j + 1) and not self.board.is_blank(i + 1, j + 1) and not self.same_side(self.turn, i + 1, j + 1):
+                for option in options:
+                    moves.append(move.Move(start + self.board._coordinate_to_location(i + 1, j + 1) + option.lower()))
+            if self.board.in_board(i + 1, j - 1) and not self.board.is_blank(i + 1, j - 1) and not self.same_side(self.turn, i + 1, j - 1):
+                for option in options:
+                    moves.append(move.Move(start + self.board._coordinate_to_location(i + 1, j - 1) + option.lower()))
+        return moves
 
     def valid_en_passant(self, move):
         i, j = self.board._location_to_coordinate(move.start)
         return move in self.pseudo_en_passant(i, j)
+    
+    def valid_promotion(self, move):
+        i, j = self.board._location_to_coordinate(move.start)
+        return move in self.pseudo_promotion(i, j)
 
     def valid_castle(self, move):
         i, j = self.board._location_to_coordinate(move.start)

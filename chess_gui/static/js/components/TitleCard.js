@@ -3,9 +3,6 @@ function TitleCard({socket}){
     const [player, setPlayer] = React.useState("White");
     const [moves, setMoves] = React.useState("");
     const [possible, setPossible] = React.useState("");
-    React.useEffect (() => {
-
-    });
     const handleReset = () => {
         socket.emit('reset');
     };

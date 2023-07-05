@@ -1,7 +1,7 @@
 import re
 
 class Move(object):
-    pattern = r"[a-h][1-8][a-h][1-8]q?"
+    pattern = r"[a-h][1-8][a-h][1-8][qQnNbBrR]?"
     def __init__(self, lan) -> None:
         assert re.fullmatch(self.pattern, lan), lan
         self.start, self.end, self.promotion = lan[:2], lan[2:4], lan[4:]
