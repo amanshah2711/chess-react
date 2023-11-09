@@ -74,7 +74,7 @@ def undo():
 @socketio.on('selected')
 def selected(location):
     if location:
-        i, j = controller.board._location_to_coordinate(location)
+        i, j = controller.board._location_to_coordinate(location) # Make sure types clean up properly
         moves = controller.legal_moves_from(i, j)
         emit('possible' ,' '.join([str(move) for move in moves]))
     else:

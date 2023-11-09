@@ -65,22 +65,39 @@ function generateBoard(fen){
 }
 
 function ChessBoard({socket}){
-	const [activePieces, setActivePieces] = React.useState({"startPos": null, "endPos": null});
+	const [activePieces, setActivePieces] = React.useState({"startPos": null, "endPos": null, "identity": null});
+	const [pawnPromo, setPawnPromo] = React.useState(false);
 	const [grid, setGrid] = React.useState(generateBoard("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"));
-	const handleClick = function chessCallback(coordinate){
+	const handleClick = function chessCallback({coordinate, identity}){
 		if (activePieces["startPos"] == null) {
-			setActivePieces({"startPos" : coordinate.toString(), "endPos" : null});
+			setActivePieces({"startPos" : coordinate, "endPos" : null, "identity": identity});
 			socket.emit("selected", coordinate.toString())
 		} else if (activePieces["startPos"] == coordinate) {
 			setActivePieces({"startPos" : null, "endPos" : null});
-			socket.emit('selected', '')
+			socket.emit('selected', '');
 		} else {
-			setActivePieces({"startPos" : activePieces["startPos"], "endPos" : coordinate.toString()});
-			socket.emit('make_move', activePieces["startPos"].toString() + coordinate.toString());
-			socket.emit('selected', '')
-			setActivePieces({"startPos" : null, "endPos" : null});
+			if (activePieces["identity"] == nameToPiece["P"] && coordinate["row"] == 8) {
+				setPawnPromo(true);
+				setActivePieces({"startPos" : activePieces["startPos"], "endPos" : coordinate, "identity" : activePieces["identity"]});
+			} else if (activePieces["identity"] == nameToPiece["p"] && coordinate["row"] == 1) {
+				setPawnPromo(true);
+				setActivePieces({"startPos" : activePieces["startPos"], "endPos" : coordinate, "identity" : activePieces["identity"]});
+			} else {
+				socket.emit('make_move', activePieces["startPos"].toString() + coordinate.toString());
+				socket.emit('selected', '');
+				setActivePieces({"startPos" : null, "endPos" : null, "identity": null});
+			}
 		}
 
+	}
+	const handlePromo = function(e) {
+		if(activePieces["identity"] == nameToPiece["P"]){
+			socket.emit('make_move', activePieces["startPos"].toString() + activePieces["endPos"].toString() + e.target.id);
+		} else {
+			socket.emit('make_move', activePieces["startPos"].toString() + activePieces["endPos"].toString() + e.target.id.toLowerCase());
+		}
+			setActivePieces({"startPos" : null, "endPos" : null, "identity": null});
+			setPawnPromo(false);
 	}
 
 	const tile_styler = (i,j) => (manhattanDistance(i,j) % 2 === 0) ? {backgroundColor : "#93602B"} : {backgroundColor: "#EACFB6"}
@@ -89,8 +106,14 @@ function ChessBoard({socket}){
 
 	React.useEffect (() => {
 		const onUpdateEvent = (value) =>{
-			setGrid(generateBoard(value))
+			setGrid(generateBoard(value));
 		};
+		if (pawnPromo) {
+			$("#pawnModal").modal("show");
+		} else {
+			$("#pawnModal").modal("hide");
+
+		}
 		socket.on("update", onUpdateEvent);
 		return ()=>{
 			socket.off("update", onUpdateEvent)
@@ -99,7 +122,27 @@ function ChessBoard({socket}){
 
 
 	return (
+		<div className="col-9">
 			<Board width={BOARD_DIM} height={BOARD_DIM} color_map={chess_styler} pieces={grid} callback={handleClick}></Board>
+
+            <div class="modal fade" id="pawnModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="staticBackdropLabel">Select Pawn's Promoted Rank</h5>
+                </div>
+                <div class="modal-body text-center">
+                <div class="btn-group" role="group" aria-label="Basic example">
+                        <button class="btn btn-info" id="Q" data-bs-dismiss="modal" onClick={handlePromo}>Queen</button>
+                        <button class="btn btn-info" id="B"data-bs-dismiss="modal" onClick={handlePromo} >Bishop</button>
+                        <button class="btn btn-info" id="N" data-bs-dismiss="modal" onClick={handlePromo}>Knight</button>
+                        <button class="btn btn-info" id="R" data-bs-dismiss="modal" onClick={handlePromo}>Rook</button>
+                </div>
+                </div>
+                </div>
+            </div>
+            </div>
+		</div>
 	)
 };
 

@@ -1,6 +1,6 @@
 
 function Square(props) {
-    const onClick = (e) => props.callback(props.coordinate)
+    const onClick = (e) => props.callback({"coordinate": props.coordinate, "identity": props.piece})
     const divStyle = {
         padding : "2\%",
     };

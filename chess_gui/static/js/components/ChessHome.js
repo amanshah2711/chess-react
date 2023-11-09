@@ -21,7 +21,7 @@ function ChessHome({socket}){
                     <div class="modal-dialog modal-dialog-centered" role="document">
                         <div class="modal-content">
                         <div class="modal-body text-center">
-                           {player} has won! 
+                           <h3>{player} has won! </h3>                   
                         </div>
                         </div>
                     </div>
