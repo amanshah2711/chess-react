@@ -1,7 +1,6 @@
 
 from chess.controller import Controller
 from chess.move import Move
-import unittest
 
 controller = Controller()
 
