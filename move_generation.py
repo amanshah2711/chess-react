@@ -105,36 +105,36 @@ def state5(controller, i, verbose=False):
     print(possible_states(controller=controller, depth=i, verbose=verbose))
 
 
-state1(controller, 1) # PASSED 
-state1(controller, 2) # PASSED 
-state1(controller, 3) # PASSED
-state1(controller, 4) # PASSED
-#state1(controller, 5) # PASSED
-#print() # PASSED
+# state1(controller, 1) # PASSED 
+# state1(controller, 2) # PASSED 
+# state1(controller, 3) # PASSED
+# state1(controller, 4) # PASSED
+# state1(controller, 5) # PASSED
+# print() # PASSED
 
-#state2(controller, 1) # PASSED
-#state2(controller, 2) # PASSED
-#state2(controller, 3) # PASSED
-#state2(controller, 4) # PASSED
-#state2(controller, 5) # PASSED
-#print() # PASSED
+# state2(controller, 1) # PASSED
+# state2(controller, 2) # PASSED
+# state2(controller, 3) # PASSED
+# state2(controller, 4) # PASSED
+# state2(controller, 5) # PASSED
+# print() # PASSED
 
-#state3(controller, 1) # PASSED
-#state3(controller, 2) # PASSED
-#state3(controller, 3) # PASSED
-#state3(controller, 4) # PASSED
-#state3(controller, 5) # PASSED
-#print() # PASSED
+# state3(controller, 1) # PASSED
+# state3(controller, 2) # PASSED
+# state3(controller, 3) # PASSED
+# state3(controller, 4) # PASSED
+# state3(controller, 5) # PASSED
+# print() # PASSED
 
-#state4(controller, 1) # PASSED
-#state4(controller, 2) # PASSED
-#state4(controller, 3) # PASSED
-#state4(controller, 4) # PASSED
-#state4(controller, 5) # PASSED
-#print() # PASSED
+# state4(controller, 1) # PASSED
+# state4(controller, 2) # PASSED
+# state4(controller, 3) # PASSED
+# state4(controller, 4) # PASSED
+# state4(controller, 5) # PASSED
+# print() # PASSED
 
-#state5(controller, 1) # PASSED
-#state5(controller, 2) # PASSED
-#state5(controller, 3) # PASSED
-#state5(controller, 4) # PASSED
-#state5(controller, 5) # PASSED 
+# state5(controller, 1) # PASSED
+# state5(controller, 2) # PASSED
+# state5(controller, 3) # PASSED
+# state5(controller, 4) # PASSED
+# state5(controller, 5) # PASSED 

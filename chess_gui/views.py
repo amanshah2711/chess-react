@@ -11,10 +11,9 @@ from chess_gui import app, socketio
 # Initializing flask app
 
 user = GUIPlayer(color="w")
-opponent = GUIPlayer(color="b")
 controller = Controller()
 user.equip(controller)
-opponent.equip(controller)
+opponent = None
 undo_style = None
 opp_type = {
     'Random' : RandomPlayer,
@@ -57,9 +56,19 @@ def make_move(message):
     if controller.game_over():
       emit("game_over", controller.turn)
 
+@socketio.on('collect_data')
+def collect():
+    emit("update", controller.get_fen_position())
+    emit("move_data", controller.moves)
+    if not opponent:
+        emit("show_options")
+
 @socketio.on('reset')
 def reset():
+    global opponent
     controller.reset()
+    opponent = None
+    emit("show_options")
     emit("update", controller.get_fen_position())
     emit("move_data", controller.moves)
     emit("possible", '')

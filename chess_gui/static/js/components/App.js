@@ -1,8 +1,10 @@
 // Importing modules
 
 function App() {
-  
-   var socket = io();
+    var socket = io();
+    socket.on('connect', function () {
+        socket.emit("collect_data");
+    })
     //var socket = io({
         //path: "/chess_gui/"
       //});

@@ -27,3 +27,5 @@ yarn-error.log*
 *.swp
 **/__pycache__
 **/.webassets-cache
+
+__pycache__

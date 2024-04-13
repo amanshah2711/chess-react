@@ -2,7 +2,11 @@
 function Settings({socket}) {
 
     React.useEffect (() => {
-        $("#settingModal").modal("show")
+        $("#settingModal").modal("hide");
+		const reveal = () =>{
+            $("#settingModal").modal("show");
+		};
+        socket.on("show_options", reveal)
     });
     return (
             <div class="modal fade" id="settingModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
@@ -14,12 +18,12 @@ function Settings({socket}) {
                 <div class="modal-body text-center">
                 <div class="btn-group" role="group" aria-label="Basic example">
                     <form action="/options">
-                        <button type="submit" class="btn btn-info" data-bs-dismiss="modal" name="opponent" value="User">GUI Player</button>
-                        <button type="submit" class="btn btn-info" data-bs-dismiss="modal" name="opponent" value="Random">Random Player</button>
-                        <button type="submit" class="btn btn-info" data-bs-dismiss="modal" name="opponent" value="Minimax" >Minimax Player</button>
+                        <button type="submit" class="btn btn-info" data-bs-dismiss="modal" name="opponent" value="User">Human</button>
+                        &nbsp;&nbsp;&nbsp; 
+                        <button type="submit" class="btn btn-info" data-bs-dismiss="modal" name="opponent" value="Random">Random AI</button>
+                        &nbsp;&nbsp;&nbsp; 
+                        <button type="submit" class="btn btn-info" data-bs-dismiss="modal" name="opponent" value="Minimax" >Minimax AI</button>
                     </form> 
-
-
                 </div>
                 </div>
                 </div>

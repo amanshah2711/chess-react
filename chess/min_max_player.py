@@ -1,6 +1,5 @@
 
 from . import player
-import time
 
 class MinMaxPlayer(player.Player):
 # white is negative
@@ -15,10 +14,7 @@ class MinMaxPlayer(player.Player):
         if depth == 0:
             return self.heuristic(self.controller.board)
 
-        tic = time.perf_counter()
         possible_moves = self.controller.legal_moves()
-        toc = time.perf_counter()
-        print(f"The time to think of a move was {toc - tic:0.6f} seconds")
         if color == 'b':
             best_value = -float('inf')
         elif color == 'w':

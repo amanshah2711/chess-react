@@ -8,8 +8,7 @@ function ChessHome({socket}){
             setPlayer(color);
         }
 		socket.on("game_over", onFinish);
-        socket.emit("reset");
-        return ()=>{
+        return ()=> {
             socket.off("game_over", onFinish);
         }
 	});

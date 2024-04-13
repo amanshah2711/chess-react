@@ -37,9 +37,12 @@ function TitleCard({socket}){
                     <h4>Player: {player} </h4>
                 </div>
                 <div className="row text-center">
+                    &nbsp; 
                     <button className="btn btn-primary" onClick={handleUndo}>Undo</button>
+                    &nbsp; 
                     <button className="btn btn-danger" onClick={handleReset}>Reset</button>
                 </div>
+                &nbsp; 
                 <div className="row text-center">
                     <p> Possible Moves: {possible} </p>
                 </div>
