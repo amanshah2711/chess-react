@@ -5,7 +5,7 @@
 
 ### `yarn install && pip install -r requirements.txt`
 
-This command installs the necessary dependencies for Python and Node.
+This command installs the necessary dependencies for Node and Python, respectively.
 
 ## 2) Running Locally
 
