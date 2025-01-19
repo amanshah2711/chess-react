@@ -4,13 +4,12 @@ from chess_gui import assets
 import os
 
 app = Flask(__name__, static_url_path='/chess_gui/static')
-app.config['SECRET_KEY'] = os.getenv("SECRET_KEY", "secret!")
 app.config['DEBUG'] = os.getenv("DEBUG", False)
 app.jinja_env.globals.update({
   'assets_env': assets.assets_env,
 })
-
-socketio = SocketIO(app)
+cors_origins = os.getenv('CORS_ALLOWED_ORIGINS', '').split(',')
+socketio = SocketIO(app, cors_origins=cors_origins)
 
 import chess_gui.views
 
