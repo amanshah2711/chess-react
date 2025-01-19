@@ -44,7 +44,7 @@ class MinMaxPlayer(player.Player):
         return best_value
 
     def take_turn(self):
-        self.find_move(self.color, depth=3, save=True)
+        self.find_move(self.color, depth=2, save=True)
         self.controller.take_turn(self.best_move)
 
     def heuristic(self, board):
